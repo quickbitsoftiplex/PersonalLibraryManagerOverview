@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "concurrently nodemon index.js \"cd.. && cd Client && npm run dev\""
+    "start": "concurrently nodemon index.js \"cd.. && cd Client && npm run dev\"",
+    "start-mac": "concurrently \"nodemon index.js\" \"cd .. && cd Client && npm run dev\""
   },
   "keywords": [],
   "author": "",
