@@ -10,6 +10,7 @@ app.use(express.json());
 // other fields are up to you
 let books = [
   {
+    id: 1,
     title: "The Name of the Wind",
     author: "Patrick Rothfuss",
     genre: "Fantasy",
@@ -17,6 +18,7 @@ let books = [
       "The first novel in The Kingkiller Chronicle series, it tells the story of a gifted young man growing up to be the most notorious wizard his world has ever seen.",
   },
   {
+    id: 2,
     title: "Mistborn: The Final Empire",
     author: "Brandon Sanderson",
     genre: "Fantasy",
@@ -24,6 +26,7 @@ let books = [
       "In a world where ash falls from the sky and mist dominates the night, an oppressed populace uses allomancy, a magic of metals, to fuel a rebellion against the Lord Ruler.",
   },
   {
+    id: 3,
     title: "The Road",
     author: "Cormac McCarthy",
     genre: "Post-Apocalyptic",
@@ -31,6 +34,7 @@ let books = [
       "A father and his son walk alone through burned America, heading through the ravaged landscape to the coast in a desperate attempt to survive.",
   },
   {
+    id: 4,
     title: "Gone Girl",
     author: "Gillian Flynn",
     genre: "Thriller",
@@ -38,6 +42,7 @@ let books = [
       "A thriller that unveils the secrets at the heart of a modern marriage, where a wife mysteriously disappears on the day of their fifth anniversary.",
   },
   {
+    id: 5,
     title: "Sapiens: A Brief History of Humankind",
     author: "Yuval Noah Harari",
     genre: "Non-Fiction",

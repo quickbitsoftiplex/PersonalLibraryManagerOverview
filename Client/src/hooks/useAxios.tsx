@@ -11,7 +11,7 @@ interface IAxiosConfigProps {
 const useAxios = (configObj: IAxiosConfigProps) => {
   const { axiosInstance, method, url, requestConfig = {} } = configObj;
 
-  const [response, setResponse] = useState<any>([]);
+  const [response, setResponse] = useState([]);
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [reload, setReload] = useState<number>(0);
