@@ -58,7 +58,7 @@ const useAxiosFunction = (): [
         default:
           throw new Error(`Error: ${method} method name is not supported`);
       }
-      console.log("Response: ", res);
+      //   console.log("Response: ", res);
       setResponse(res?.data);
     } catch (err) {
       if (axios.isCancel(err)) {
@@ -75,7 +75,7 @@ const useAxiosFunction = (): [
     }
   };
   useEffect(() => {
-    console.log(`Controller: ${controller}`);
+    // console.log(`Controller: ${controller}`);
     return () => controller && controller.abort();
   }, [controller]);
 

@@ -1,8 +1,9 @@
 import axios from "../apis/books";
 import useAxiosFunction from "../hooks/useAxiosFunction";
 import { useEffect } from "react";
+import useSWR from "swr";
 
-const Books1 = () => {
+const BooksList = () => {
   const [books, error, loading, axiosFetch] = useAxiosFunction();
 
   const getData = async () => {
@@ -88,7 +89,7 @@ const Books1 = () => {
         </button>
         <button
           onClick={() => {
-            handleDelete(5);
+            handleDelete(4);
           }}
         >
           Delete a book
@@ -110,4 +111,4 @@ const Books1 = () => {
   );
 };
 
-export default Books1;
+export default BooksList;
