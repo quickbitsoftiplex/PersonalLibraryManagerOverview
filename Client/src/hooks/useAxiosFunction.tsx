@@ -5,11 +5,11 @@ interface IAxiosConfigProps {
   axiosInstance?: AxiosInstance;
   method: Method;
   url: string;
-  requestConfig?: AxiosRequestConfig;
+  requestConfig?: AxiosRequestConfig | IBooksProps;
 }
 
-interface IBooksProps {
-  id: number;
+export interface IBooksProps {
+  id?: number;
   title: string;
   author: string;
   genre: string;
@@ -35,6 +35,7 @@ const useAxiosFunction = (): [
     try {
       setLoading(true);
       setError("");
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       const ctrl = new AbortController();
       setController(ctrl);
       const configWithSignal = {
@@ -75,7 +76,6 @@ const useAxiosFunction = (): [
     }
   };
   useEffect(() => {
-    // console.log(`Controller: ${controller}`);
     return () => controller && controller.abort();
   }, [controller]);
 

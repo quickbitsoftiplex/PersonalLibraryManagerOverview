@@ -1,54 +1,150 @@
 import axios from "../apis/books";
-import useAxiosFunction from "../hooks/useAxiosFunction";
-import { useEffect } from "react";
-import useSWR from "swr";
+import useAxiosFunction, { IBooksProps } from "../hooks/useAxiosFunction";
+import useSWR, { mutate } from "swr";
+import Snackbar from "@mui/material/Snackbar";
+import MuiAlert, { AlertColor } from "@mui/material/Alert";
+import { useEffect, useState } from "react";
+import BookCard from "./BookCard";
+import Fab from "@mui/material/Fab";
+import AddIcon from "@mui/icons-material/Add";
+import { Grid } from "@mui/material";
+import Tooltip from "@mui/material/Tooltip";
+import CircularProgress from "@mui/material/CircularProgress";
+import Box from "@mui/material/Box";
+import ReusableBookForm from "./ReusableBookForm";
+import { Modal } from "@mui/material";
+import { FormikHelpers } from "formik";
+
+const BOOKS_MUTATION_KEY = "/books";
+const getBooks = (url: string) => axios.get(url).then((res) => res.data);
+
+interface ISnackbarStateProps {
+  open: boolean;
+  message: string;
+  severity: AlertColor | undefined;
+}
+
+export interface IFormValuesProps {
+  title: string;
+  author: string;
+  genre: string;
+  description: string;
+}
+
+const style = {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: "70%",
+  bgcolor: "background.paper",
+  boxShadow: 24,
+  p: 4,
+  outline: "none",
+};
 
 const BooksList = () => {
-  const [books, error, loading, axiosFetch] = useAxiosFunction();
+  const [snackbar, setSnackbar] = useState<ISnackbarStateProps>({
+    open: false,
+    message: "",
+    severity: undefined,
+  });
+  const [, error, loading, axiosFetch] = useAxiosFunction();
+  const [isFormOpen, setFormOpen] = useState<boolean>(false);
+  const [currentBookDetails, setCurrentBookDetails] =
+    useState<IFormValuesProps | null>(null);
+  const { data: booksData, error: swrError } = useSWR(
+    BOOKS_MUTATION_KEY,
+    getBooks
+  );
 
-  const getData = async () => {
-    await axiosFetch({
-      axiosInstance: axios,
-      method: "GET",
-      url: "/books",
+  useEffect(() => {
+    if (error) {
+      setSnackbar({
+        open: true,
+        message: error,
+        severity: "error",
+      });
+    }
+  }, [error]);
+
+  if (swrError && !snackbar.open) {
+    setSnackbar({
+      open: true,
+      message: "Error fetching books",
+      severity: "error",
+    });
+  }
+
+  const handleClose = (
+    event?: React.SyntheticEvent | Event,
+    reason?: string
+  ) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackbar({
+      ...snackbar,
+      open: false,
     });
   };
 
-  useEffect(() => {
-    getData();
-  }, []);
+  const handleSubmit = async (
+    values: IFormValuesProps,
+    actions: FormikHelpers<IFormValuesProps>
+  ) => {
+    const { title, author, genre, description } = values;
 
-  const handleSubmit = async () => {
     await axiosFetch({
       axiosInstance: axios,
       method: "POST",
       url: "/books",
       requestConfig: {
-        id: 6,
-        title: "title-test",
-        author: "author-test",
-        genre: "genre-test",
-        description: "desc-test",
+        title,
+        author,
+        genre,
+        description,
       },
     });
 
-    await getData();
+    mutate(BOOKS_MUTATION_KEY);
+    setSnackbar({
+      open: true,
+      message: "Book added successfully!",
+      severity: "success",
+    });
+
+    actions.setSubmitting(false);
+    handleCloseForm();
   };
 
-  const handleUpdate = async (bookId: number) => {
+  const handleUpdate = async (
+    bookId: number,
+    values: IFormValuesProps,
+    actions: FormikHelpers<IFormValuesProps>
+  ) => {
+    const { title, author, genre, description } = values;
     await axiosFetch({
       axiosInstance: axios,
       method: "PUT",
       url: `/books/${bookId}`,
       requestConfig: {
-        title: "title-test-new",
-        author: "author-test",
-        genre: "genre-test",
-        description: "desc-test",
+        title,
+        author,
+        genre,
+        description,
       },
     });
+    mutate(BOOKS_MUTATION_KEY);
+    setSnackbar({
+      open: true,
+      message: "Book updated successfully!",
+      severity: "success",
+    });
 
-    await getData();
+    actions.setSubmitting(false);
+    handleCloseForm();
   };
 
   const handleDelete = async (bookId: number) => {
@@ -56,57 +152,102 @@ const BooksList = () => {
       axiosInstance: axios,
       method: "DELETE",
       url: `/books/${bookId}`,
-      requestConfig: {},
     });
+    mutate(BOOKS_MUTATION_KEY);
+    setSnackbar({
+      open: true,
+      message: "Book deleted successfully!",
+      severity: "success",
+    });
+  };
 
-    await getData();
+  const handleAddBookClick = () => {
+    setFormOpen(true);
+  };
+
+  const handleCloseForm = () => {
+    setFormOpen(false);
+  };
+
+  const openFormWithBookDetails = (book: IBooksProps) => {
+    setCurrentBookDetails({
+      title: book.title,
+      author: book.author,
+      genre: book.genre,
+      description: book.description,
+    });
+    setFormOpen(true);
   };
 
   return (
     <div>
-      <article>
-        <h2>BOOKS</h2>
-        <button
-          onClick={() => {
-            handleSubmit();
+      {loading && (
+        <Box sx={{ display: "flex" }}>
+          <CircularProgress />
+        </Box>
+      )}
+      <Grid container spacing={2}>
+        {booksData &&
+          booksData.map((book: IBooksProps) => (
+            <BookCard
+              key={book.id}
+              id={book.id}
+              title={book.title}
+              author={book.author}
+              description={book.description}
+              genre={book.genre}
+              handleDelete={() => handleDelete(book.id!)}
+            ></BookCard>
+          ))}
+      </Grid>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={1200}
+        onClose={handleClose}
+      >
+        <MuiAlert
+          elevation={6}
+          variant="filled"
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+          onClose={handleClose}
+        >
+          {snackbar.message}
+        </MuiAlert>
+      </Snackbar>
+      {!isFormOpen && (
+        <Tooltip title="Add a book" placement="left">
+          <Fab
+            size="large"
+            color="primary"
+            aria-label="add"
+            style={{ position: "fixed", bottom: 16, right: 16 }}
+            onClick={handleAddBookClick}
+          >
+            <AddIcon />
+          </Fab>
+        </Tooltip>
+      )}
+
+      {isFormOpen && (
+        <Modal
+          open={isFormOpen}
+          onClose={handleCloseForm}
+          aria-labelledby="simple-modal-title"
+          aria-describedby="simple-modal-description"
+          sx={{
+            backdropFilter: "blur(5px)",
           }}
         >
-          Submit a book{" "}
-        </button>
-        <button
-          onClick={() => {
-            handleUpdate(6);
-          }}
-        >
-          Update a book
-        </button>
-        <button
-          onClick={() => {
-            getData();
-          }}
-        >
-          Get books
-        </button>
-        <button
-          onClick={() => {
-            handleDelete(4);
-          }}
-        >
-          Delete a book
-        </button>
-        {loading && <p>Loading...</p>}
-        {!loading && error && <p>{error}</p>}
-        {!loading && !error && books && (
-          <ul>
-            {books.map((book, index) => (
-              <li key={index}>
-                {book.title} {book.id}
-              </li>
-            ))}
-          </ul>
-        )}
-        {!loading && !error && !books && <p>No books to display</p>}
-      </article>
+          <Box sx={style}>
+            <ReusableBookForm
+              onClose={handleCloseForm}
+              isLoading={loading}
+              onSubmit={handleSubmit}
+            />
+          </Box>
+        </Modal>
+      )}
     </div>
   );
 };
