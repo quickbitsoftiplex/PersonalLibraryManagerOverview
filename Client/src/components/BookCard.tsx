@@ -1,4 +1,4 @@
-import useAxiosFunction, { IBooksProps } from "../hooks/useAxiosFunction";
+import { IBooksProps } from "../hooks/useAxiosFunction";
 import {
   Card,
   CardContent,
@@ -18,6 +18,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 interface IBookCardProps extends IBooksProps {
   handleEdit?: any;
   handleDelete: any;
+  loading: boolean;
 }
 
 const BookCard = ({
@@ -28,8 +29,8 @@ const BookCard = ({
   description,
   handleEdit,
   handleDelete,
+  loading,
 }: IBookCardProps) => {
-  const [, , loading] = useAxiosFunction();
   const theme = useTheme();
   const matches = useMediaQuery(theme.breakpoints.up("sm"));
 

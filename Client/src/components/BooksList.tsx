@@ -52,6 +52,8 @@ const BooksList = () => {
   const [, error, loading, axiosFetch] = useAxiosFunction();
   const [isFormOpen, setFormOpen] = useState<boolean>(false);
   const [selectedBook, setSelectedBook] = useState<any>(null);
+  const [loadingBookId, setLoadingBookId] = useState(null);
+
   const { data: booksData, error: swrError } = useSWR(
     BOOKS_MUTATION_KEY,
     getBooks
@@ -144,6 +146,7 @@ const BooksList = () => {
   };
 
   const handleDelete = async (bookId: number) => {
+    setLoadingBookId(bookId);
     await axiosFetch({
       axiosInstance: axios,
       method: "DELETE",
@@ -155,6 +158,7 @@ const BooksList = () => {
       message: "Book deleted successfully!",
       severity: "success",
     });
+    setLoadingBookId(null);
   };
 
   const handleAddBookClick = () => {
@@ -173,11 +177,6 @@ const BooksList = () => {
 
   return (
     <div>
-      {loading && (
-        <Box sx={{ display: "flex" }}>
-          <CircularProgress />
-        </Box>
-      )}
       <Grid container spacing={2}>
         {booksData &&
           booksData.map((book: IBooksProps) => (
@@ -190,6 +189,7 @@ const BooksList = () => {
               genre={book.genre}
               handleDelete={() => handleDelete(book.id!)}
               handleEdit={() => handleEditBook(book)}
+              loading={loadingBookId === book.id}
             ></BookCard>
           ))}
       </Grid>
