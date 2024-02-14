@@ -14,21 +14,25 @@ import { IBooksProps } from "../hooks/useAxiosFunction";
 
 interface IReusableBookFormProps {
   onClose: () => void;
+  onUpdate?: (
+    values: IFormValuesProps,
+    id: number | undefined,
+    actions: any
+  ) => void;
   onSubmit?: (values: IFormValuesProps, actions: any) => void;
   isLoading: boolean;
-  bookId?: number;
-  currentBookDetails?: IBooksProps;
+  selectedBook?: IBooksProps;
 }
 
 const ReusableBookForm = ({
   onClose,
   onSubmit,
-  bookId,
   isLoading,
-  currentBookDetails,
+  onUpdate,
+  selectedBook,
 }: IReusableBookFormProps) => {
   const { values, errors, touched, handleChange, handleSubmit } = useFormik({
-    initialValues: currentBookDetails || {
+    initialValues: selectedBook || {
       title: "",
       author: "",
       genre: "",
@@ -37,8 +41,9 @@ const ReusableBookForm = ({
     validationSchema: BookFormValidation,
 
     onSubmit: (values, actions) => {
-      if (currentBookDetails && currentBookDetails.id) {
-        handleUpdate(currentBookDetails.id, values, actions);
+      if (selectedBook && "id" in selectedBook && onUpdate) {
+        console.log(selectedBook);
+        onUpdate(actions, values, selectedBook.id);
       } else {
         if (onSubmit) {
           onSubmit(values, actions);
@@ -46,8 +51,6 @@ const ReusableBookForm = ({
       }
     },
   });
-
-  const submitButtonLabel = currentBookDetails ? "Edit book" : "Add new book";
 
   return (
     <>
@@ -119,7 +122,7 @@ const ReusableBookForm = ({
           </Grid>
           <Grid item>
             <Button type="submit" variant="contained" disabled={isLoading}>
-              {isLoading ? <CircularProgress size={24} /> : submitButtonLabel}
+              {isLoading ? <CircularProgress size={24} /> : "submit"}
             </Button>
           </Grid>
         </Grid>

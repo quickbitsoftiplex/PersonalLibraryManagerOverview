@@ -51,8 +51,7 @@ const BooksList = () => {
   });
   const [, error, loading, axiosFetch] = useAxiosFunction();
   const [isFormOpen, setFormOpen] = useState<boolean>(false);
-  const [currentBookDetails, setCurrentBookDetails] =
-    useState<IFormValuesProps | null>(null);
+  const [selectedBook, setSelectedBook] = useState<any>(null);
   const { data: booksData, error: swrError } = useSWR(
     BOOKS_MUTATION_KEY,
     getBooks
@@ -95,7 +94,7 @@ const BooksList = () => {
     actions: FormikHelpers<IFormValuesProps>
   ) => {
     const { title, author, genre, description } = values;
-
+    console.log("submit pressed");
     await axiosFetch({
       axiosInstance: axios,
       method: "POST",
@@ -120,21 +119,17 @@ const BooksList = () => {
   };
 
   const handleUpdate = async (
-    bookId: number,
+    actions: FormikHelpers<IFormValuesProps>,
     values: IFormValuesProps,
-    actions: FormikHelpers<IFormValuesProps>
+    bookId: string
   ) => {
-    const { title, author, genre, description } = values;
+    console.log("handle update fired");
+    // const { title, author, genre, description } = values;
     await axiosFetch({
       axiosInstance: axios,
       method: "PUT",
       url: `/books/${bookId}`,
-      requestConfig: {
-        title,
-        author,
-        genre,
-        description,
-      },
+      requestConfig: values,
     });
     mutate(BOOKS_MUTATION_KEY);
     setSnackbar({
@@ -145,6 +140,7 @@ const BooksList = () => {
 
     actions.setSubmitting(false);
     handleCloseForm();
+    setSelectedBook(null);
   };
 
   const handleDelete = async (bookId: number) => {
@@ -167,15 +163,11 @@ const BooksList = () => {
 
   const handleCloseForm = () => {
     setFormOpen(false);
+    setSelectedBook(null);
   };
 
-  const openFormWithBookDetails = (book: IBooksProps) => {
-    setCurrentBookDetails({
-      title: book.title,
-      author: book.author,
-      genre: book.genre,
-      description: book.description,
-    });
+  const handleEditBook = (book: IBooksProps) => {
+    setSelectedBook(book);
     setFormOpen(true);
   };
 
@@ -197,6 +189,7 @@ const BooksList = () => {
               description={book.description}
               genre={book.genre}
               handleDelete={() => handleDelete(book.id!)}
+              handleEdit={() => handleEditBook(book)}
             ></BookCard>
           ))}
       </Grid>
@@ -244,6 +237,8 @@ const BooksList = () => {
               onClose={handleCloseForm}
               isLoading={loading}
               onSubmit={handleSubmit}
+              selectedBook={selectedBook}
+              onUpdate={handleUpdate}
             />
           </Box>
         </Modal>

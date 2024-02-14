@@ -16,8 +16,8 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 interface IBookCardProps extends IBooksProps {
-  handleEdit?: () => void;
-  handleDelete: () => void;
+  handleEdit?: any;
+  handleDelete: any;
 }
 
 const BookCard = ({
@@ -32,34 +32,6 @@ const BookCard = ({
   const [, , loading] = useAxiosFunction();
   const theme = useTheme();
   const matches = useMediaQuery(theme.breakpoints.up("sm"));
-
-  const handleUpdate = async (
-    bookId: number,
-    values: IFormValuesProps,
-    actions: FormikHelpers<IFormValuesProps>
-  ) => {
-    const { title, author, genre, description } = values;
-    await axiosFetch({
-      axiosInstance: axios,
-      method: "PUT",
-      url: `/books/${bookId}`,
-      requestConfig: {
-        title,
-        author,
-        genre,
-        description,
-      },
-    });
-    mutate(BOOKS_MUTATION_KEY);
-    setSnackbar({
-      open: true,
-      message: "Book updated successfully!",
-      severity: "success",
-    });
-
-    actions.setSubmitting(false);
-    handleCloseForm();
-  };
 
   return (
     <Grid item xs={12} sm={6} md={4} lg={3}>
