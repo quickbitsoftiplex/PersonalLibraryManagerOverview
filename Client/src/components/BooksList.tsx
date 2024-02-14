@@ -7,13 +7,21 @@ import { useEffect, useState } from "react";
 import BookCard from "./BookCard";
 import Fab from "@mui/material/Fab";
 import AddIcon from "@mui/icons-material/Add";
-import { Grid } from "@mui/material";
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Grid,
+  Stack,
+  TextField,
+} from "@mui/material";
 import Tooltip from "@mui/material/Tooltip";
-import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
 import ReusableBookForm from "./ReusableBookForm";
 import { Modal } from "@mui/material";
 import { FormikHelpers } from "formik";
+import { Search } from "@mui/icons-material";
 
 const BOOKS_MUTATION_KEY = "/books";
 const getBooks = (url: string) => axios.get(url).then((res) => res.data);
@@ -51,8 +59,14 @@ const BooksList = () => {
   });
   const [, error, loading, axiosFetch] = useAxiosFunction();
   const [isFormOpen, setFormOpen] = useState<boolean>(false);
-  const [selectedBook, setSelectedBook] = useState<any>(null);
-  const [loadingBookId, setLoadingBookId] = useState(null);
+  const [selectedBook, setSelectedBook] = useState<IBooksProps | undefined>(
+    undefined
+  );
+  const [loadingBookId, setLoadingBookId] = useState<number | undefined>(
+    undefined
+  );
+  const [searchDialogOpen, setSearchDialogOpen] = useState<boolean>(false);
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
   const { data: booksData, error: swrError } = useSWR(
     BOOKS_MUTATION_KEY,
@@ -142,7 +156,7 @@ const BooksList = () => {
 
     actions.setSubmitting(false);
     handleCloseForm();
-    setSelectedBook(null);
+    setSelectedBook(undefined);
   };
 
   const handleDelete = async (bookId: number) => {
@@ -158,7 +172,7 @@ const BooksList = () => {
       message: "Book deleted successfully!",
       severity: "success",
     });
-    setLoadingBookId(null);
+    setLoadingBookId(undefined);
   };
 
   const handleAddBookClick = () => {
@@ -167,7 +181,7 @@ const BooksList = () => {
 
   const handleCloseForm = () => {
     setFormOpen(false);
-    setSelectedBook(null);
+    setSelectedBook(undefined);
   };
 
   const handleEditBook = (book: IBooksProps) => {
@@ -175,9 +189,23 @@ const BooksList = () => {
     setFormOpen(true);
   };
 
+  const handleSearchDialogOpen = () => {
+    setSearchDialogOpen(true);
+  };
+
+  const handleSearchDialogClose = () => {
+    setSearchDialogOpen(false);
+  };
+
+  const handleSearchInputChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setSearchTerm(event.target.value);
+  };
+
   return (
     <div>
-      <Grid container spacing={2}>
+      <Grid container gap={{ xs: 2, lg: 3 }} justifyContent={"center"}>
         {booksData &&
           booksData.map((book: IBooksProps) => (
             <BookCard
@@ -208,20 +236,45 @@ const BooksList = () => {
           {snackbar.message}
         </MuiAlert>
       </Snackbar>
-      {!isFormOpen && (
-        <Tooltip title="Add a book" placement="left">
-          <Fab
-            size="large"
-            color="primary"
-            aria-label="add"
-            style={{ position: "fixed", bottom: 16, right: 16 }}
-            onClick={handleAddBookClick}
-          >
-            <AddIcon />
-          </Fab>
-        </Tooltip>
-      )}
 
+      <Stack
+        direction="column"
+        justifyContent="flex-start"
+        alignItems="center"
+        spacing={1}
+        style={{ position: "fixed", bottom: 16, right: 16 }}
+      >
+        <Stack
+          direction="row"
+          justifyContent="flex-start"
+          alignItems="center"
+          spacing={1}
+        >
+          <Tooltip title="Search for a book" placement="left">
+            <Fab
+              size="large"
+              color="secondary"
+              aria-label="add"
+              onClick={handleSearchDialogOpen}
+            >
+              <Search />
+            </Fab>
+          </Tooltip>
+        </Stack>
+
+        {!isFormOpen && (
+          <Tooltip title="Add a book" placement="left">
+            <Fab
+              size="large"
+              color="primary"
+              aria-label="add"
+              onClick={handleAddBookClick}
+            >
+              <AddIcon />
+            </Fab>
+          </Tooltip>
+        )}
+      </Stack>
       {isFormOpen && (
         <Modal
           open={isFormOpen}
@@ -243,6 +296,25 @@ const BooksList = () => {
           </Box>
         </Modal>
       )}
+      <Dialog open={searchDialogOpen} onClose={handleSearchDialogClose}>
+        <DialogTitle>Search for a Book</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            id="search"
+            label="Book Name"
+            type="text"
+            fullWidth
+            variant="standard"
+            value={searchTerm}
+            onChange={handleSearchInputChange}
+          />
+          <Button onClick={handleSearchDialogClose} color="primary">
+            Search
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
