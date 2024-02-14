@@ -1,4 +1,3 @@
-import { useFormik } from "formik";
 import {
   Button,
   TextField,
@@ -9,17 +8,18 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { BookFormValidation } from "../schemas";
-import { IFormValuesProps } from "./BooksList";
-import { IBooksProps } from "../hooks/useAxiosFunction";
+import { IFormValuesProps } from "./Books";
+import { IBooksProps } from "../hooks/useAxiosCrudOps";
+import { useFormik } from "formik";
 
 interface IReusableBookFormProps {
   onClose: () => void;
   onUpdate?: (
     values: IFormValuesProps,
     id: number | undefined,
-    actions: any
+    actions: unknown
   ) => void;
-  onSubmit?: (values: IFormValuesProps, actions: any) => void;
+  onSubmit?: (values: IFormValuesProps, actions: unknown) => void;
   isLoading: boolean;
   selectedBook?: IBooksProps;
 }
@@ -40,7 +40,7 @@ const ReusableBookForm = ({
     },
     validationSchema: BookFormValidation,
 
-    onSubmit: (values, actions) => {
+    onSubmit: (values: unknown, actions: unknown) => {
       if (selectedBook && "id" in selectedBook && onUpdate) {
         console.log(selectedBook);
         onUpdate(actions, values, selectedBook.id);

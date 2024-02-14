@@ -1,4 +1,4 @@
-import { IBooksProps } from "../hooks/useAxiosFunction";
+import { IBooksProps } from "../hooks/useAxiosCrudOps";
 import {
   Card,
   CardContent,
@@ -35,9 +35,11 @@ const BookCard = ({
   return (
     <Card
       sx={{
-        width: 300,
+        width: 330,
+        display: "flex",
+        flexDirection: "column",
         transition: "0.3s",
-        "&:hover": { elevation: 10 },
+        "&:hover": { boxShadow: "0 16px 40px -12.125px rgba(0,0,0,0.3)" },
       }}
     >
       <CardMedia
@@ -47,7 +49,7 @@ const BookCard = ({
         alt={title}
         sx={{ objectFit: "contain" }}
       />
-      <CardContent>
+      <CardContent sx={{ flexGrow: 1 }}>
         <Typography
           sx={{ fontSize: matches ? 16 : 14 }}
           color="text.secondary"
@@ -61,22 +63,20 @@ const BookCard = ({
         <Typography sx={{ mb: 1.5 }} color="text.secondary">
           Author: {author}
         </Typography>
-        <Typography variant="body2" noWrap>
-          {description}
-        </Typography>
+        <Typography variant="body2">{description}</Typography>
         {loading && (
           <Box sx={{ display: "flex", justifyContent: "center", marginTop: 2 }}>
             <CircularProgress />
           </Box>
         )}
       </CardContent>
-      <CardActions disableSpacing>
+      <CardActions disableSpacing sx={{ mt: "auto" }}>
         <Box sx={{ marginLeft: "auto" }}>
           <IconButton aria-label="edit" onClick={handleEdit}>
-            <EditIcon />
+            <EditIcon color="primary" />
           </IconButton>
           <IconButton aria-label="delete" onClick={handleDelete}>
-            <DeleteIcon />
+            <DeleteIcon color="error" />
           </IconButton>
         </Box>
       </CardActions>

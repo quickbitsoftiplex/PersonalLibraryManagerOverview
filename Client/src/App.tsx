@@ -1,11 +1,14 @@
 import "./App.css";
-import BooksList from "./components/BooksList";
+import Books from "./components/Books";
+import CustomAppBar from "./components/CustomAppBar";
 
 function App() {
   return (
     <>
-      <h1>Books</h1>
-      <BooksList />
+      <CustomAppBar></CustomAppBar>
+      <div style={{ marginTop: "7rem" }}>
+        <Books />
+      </div>
     </>
   );
 }

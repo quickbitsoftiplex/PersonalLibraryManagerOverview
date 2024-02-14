@@ -53,7 +53,19 @@ let books = [
 
 // Get all books
 app.get("/books", (req, res) => {
-  res.json(books);
+  const { title } = req.query;
+  if (title) {
+    const filteredBooks = books.filter((book) =>
+      book.title.toLowerCase().includes(title.toLowerCase())
+    );
+    if (filteredBooks.length) {
+      res.json(filteredBooks);
+    } else {
+      res.status(404).json({ message: "No books found with that name" });
+    }
+  } else {
+    res.json(books);
+  }
 });
 
 // Add a new book

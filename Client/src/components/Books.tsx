@@ -1,27 +1,18 @@
 import axios from "../apis/books";
-import useAxiosFunction, { IBooksProps } from "../hooks/useAxiosFunction";
+import useAxiosFunction, { IBooksProps } from "../hooks/useAxiosCrudOps";
 import useSWR, { mutate } from "swr";
-import Snackbar from "@mui/material/Snackbar";
-import MuiAlert, { AlertColor } from "@mui/material/Alert";
+import { AlertColor } from "@mui/material/Alert";
 import { useEffect, useState } from "react";
 import BookCard from "./BookCard";
 import Fab from "@mui/material/Fab";
 import AddIcon from "@mui/icons-material/Add";
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  Grid,
-  Stack,
-  TextField,
-} from "@mui/material";
+import { Button, Grid, Stack } from "@mui/material";
 import Tooltip from "@mui/material/Tooltip";
-import Box from "@mui/material/Box";
-import ReusableBookForm from "./ReusableBookForm";
-import { Modal } from "@mui/material";
 import { FormikHelpers } from "formik";
 import { Search } from "@mui/icons-material";
+import CustomSnackbar from "./CustomSnackBar";
+import BookModal from "./BookModal";
+import SearchDialog from "./SearchDialog";
 
 const BOOKS_MUTATION_KEY = "/books";
 const getBooks = (url: string) => axios.get(url).then((res) => res.data);
@@ -39,19 +30,7 @@ export interface IFormValuesProps {
   description: string;
 }
 
-const style = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: "70%",
-  bgcolor: "background.paper",
-  boxShadow: 24,
-  p: 4,
-  outline: "none",
-};
-
-const BooksList = () => {
+const Books = () => {
   const [snackbar, setSnackbar] = useState<ISnackbarStateProps>({
     open: false,
     message: "",
@@ -67,6 +46,7 @@ const BooksList = () => {
   );
   const [searchDialogOpen, setSearchDialogOpen] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [bookBySearch, setBookBySearch] = useState<IBooksProps>();
 
   const { data: booksData, error: swrError } = useSWR(
     BOOKS_MUTATION_KEY,
@@ -90,20 +70,6 @@ const BooksList = () => {
       severity: "error",
     });
   }
-
-  const handleClose = (
-    event?: React.SyntheticEvent | Event,
-    reason?: string
-  ) => {
-    if (reason === "clickaway") {
-      return;
-    }
-
-    setSnackbar({
-      ...snackbar,
-      open: false,
-    });
-  };
 
   const handleSubmit = async (
     values: IFormValuesProps,
@@ -137,10 +103,9 @@ const BooksList = () => {
   const handleUpdate = async (
     actions: FormikHelpers<IFormValuesProps>,
     values: IFormValuesProps,
-    bookId: string
+    bookId: number
   ) => {
     console.log("handle update fired");
-    // const { title, author, genre, description } = values;
     await axiosFetch({
       axiosInstance: axios,
       method: "PUT",
@@ -148,6 +113,9 @@ const BooksList = () => {
       requestConfig: values,
     });
     mutate(BOOKS_MUTATION_KEY);
+    if (bookBySearch && bookBySearch.id === bookId) {
+      setBookBySearch({ ...bookBySearch, ...values });
+    }
     setSnackbar({
       open: true,
       message: "Book updated successfully!",
@@ -167,6 +135,9 @@ const BooksList = () => {
       url: `/books/${bookId}`,
     });
     mutate(BOOKS_MUTATION_KEY);
+    if (bookBySearch && bookBySearch.id === bookId) {
+      setBookBySearch(undefined);
+    }
     setSnackbar({
       open: true,
       message: "Book deleted successfully!",
@@ -197,16 +168,87 @@ const BooksList = () => {
     setSearchDialogOpen(false);
   };
 
-  const handleSearchInputChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setSearchTerm(event.target.value);
+  const handleClearSearch = () => {
+    setSearchTerm("");
+    setBookBySearch(undefined);
+  };
+
+  const handleBookSearchByTitle = async () => {
+    if (!searchTerm.trim()) {
+      console.log("No search term provided");
+      setSnackbar({
+        open: true,
+        message: "Please enter a search term.",
+        severity: "info",
+      });
+      return;
+    }
+    try {
+      const response = await axios.get("/books", {
+        params: { title: searchTerm },
+      });
+      if (response && response.data.length > 0) {
+        const bookData = response.data[0];
+        setBookBySearch(bookData);
+
+        setSnackbar({
+          open: true,
+          message: `Found book: ${bookData.title}`,
+          severity: "success",
+        });
+      } else {
+        console.log("No book found");
+        setBookBySearch(undefined);
+
+        setSnackbar({
+          open: true,
+          message: "No book found with the given title.",
+          severity: "info",
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      setBookBySearch(undefined);
+
+      setSnackbar({
+        open: true,
+        message: "An error occured",
+        severity: "error",
+      });
+    } finally {
+      setSearchTerm("");
+      handleSearchDialogClose();
+    }
   };
 
   return (
     <div>
       <Grid container gap={{ xs: 2, lg: 3 }} justifyContent={"center"}>
+        {bookBySearch && (
+          <Stack
+            direction="column"
+            justifyContent="flex-start"
+            alignItems="center"
+            spacing={1}
+          >
+            <BookCard
+              key={bookBySearch.id}
+              id={bookBySearch.id}
+              title={bookBySearch.title}
+              author={bookBySearch.author}
+              description={bookBySearch.description}
+              genre={bookBySearch.genre}
+              handleDelete={() => handleDelete(bookBySearch.id!)}
+              handleEdit={() => handleEditBook(bookBySearch)}
+              loading={loadingBookId === bookBySearch.id}
+            />
+            <Button onClick={handleClearSearch} color="primary">
+              Clear search & return to main screen
+            </Button>
+          </Stack>
+        )}
         {booksData &&
+          !bookBySearch &&
           booksData.map((book: IBooksProps) => (
             <BookCard
               key={book.id}
@@ -221,21 +263,7 @@ const BooksList = () => {
             ></BookCard>
           ))}
       </Grid>
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={1200}
-        onClose={handleClose}
-      >
-        <MuiAlert
-          elevation={6}
-          variant="filled"
-          severity={snackbar.severity}
-          sx={{ width: "100%" }}
-          onClose={handleClose}
-        >
-          {snackbar.message}
-        </MuiAlert>
-      </Snackbar>
+      <CustomSnackbar snackbar={snackbar} setSnackbar={setSnackbar} />
 
       <Stack
         direction="column"
@@ -276,47 +304,26 @@ const BooksList = () => {
         )}
       </Stack>
       {isFormOpen && (
-        <Modal
-          open={isFormOpen}
+        <BookModal
+          isOpen={isFormOpen}
           onClose={handleCloseForm}
-          aria-labelledby="simple-modal-title"
-          aria-describedby="simple-modal-description"
-          sx={{
-            backdropFilter: "blur(5px)",
-          }}
-        >
-          <Box sx={style}>
-            <ReusableBookForm
-              onClose={handleCloseForm}
-              isLoading={loading}
-              onSubmit={handleSubmit}
-              selectedBook={selectedBook}
-              onUpdate={handleUpdate}
-            />
-          </Box>
-        </Modal>
+          isLoading={loading}
+          onSubmit={handleSubmit}
+          selectedBook={selectedBook}
+          onUpdate={handleUpdate}
+        />
       )}
-      <Dialog open={searchDialogOpen} onClose={handleSearchDialogClose}>
-        <DialogTitle>Search for a Book</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            id="search"
-            label="Book Name"
-            type="text"
-            fullWidth
-            variant="standard"
-            value={searchTerm}
-            onChange={handleSearchInputChange}
-          />
-          <Button onClick={handleSearchDialogClose} color="primary">
-            Search
-          </Button>
-        </DialogContent>
-      </Dialog>
+
+      <SearchDialog
+        open={searchDialogOpen}
+        onClose={handleSearchDialogClose}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        onSearch={handleBookSearchByTitle}
+        isLoading={loading}
+      />
     </div>
   );
 };
 
-export default BooksList;
+export default Books;
