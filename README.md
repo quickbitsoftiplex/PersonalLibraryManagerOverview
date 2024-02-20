@@ -14,3 +14,4 @@ Follow these steps to get the project running on your machine:
 6. If you are on **Mac**, run `npm run start-mac`, otherwise, just run `npm run start`. On **Linux**, the Mac script should work just fine, though it was not tested in that environment.
 7. Now the services are running concurrently, enjoy!
 
+Contact: andrei.alexandruioan97@gmail.com
